@@ -135,3 +135,168 @@ exports.getBPPrices = async (req, res) => {
     console.log("Error", error);
   }
 };
+
+exports.getAlpetPrices = async (req, res) => {
+  const { city } = req.body;
+  const upperCity = city.toLocaleUpperCase("tr-TR");
+  console.log(upperCity);
+  const today = new Date();
+  const date = today.toISOString().split("T")[0];
+  console.log(date);
+  const browser = await puppeteer.launch({ headless: false });
+  const page = await browser.newPage();
+  const url = `${process.env.ALPET_URI}?dt=${date}&city=${upperCity}`;
+  await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
+  await page.click(".cc-btn");
+  console.log("butona basıldı");
+  console.log(url);
+  const prices = await page.$$eval("tbody tr", (rows) => {
+    return rows.map((row) => {
+      const columns = row.querySelectorAll("td");
+      return Array.from(columns, (column) => column.innerText.trim());
+    });
+  });
+  res.json(prices);
+  console.log(prices);
+};
+
+exports.getKadoilPrices = async (req, res) => {
+  try {
+    const { city } = req.body;
+    const lowerCity = city.toLowerCase();
+    console.log(lowerCity);
+    const browser = await puppeteer.launch({ headless: false });
+    const url = `${process.env.KADOIL_URI}`;
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
+    await page.click("#euCookieAcceptWP");
+    console.log("butona basıldı");
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const frameHandle = await page.$("#frame");
+
+    const frame = await frameHandle.contentFrame();
+
+    await frame.waitForSelector("#selectProvince");
+
+    await frame.select("#selectProvince", lowerCity);
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    await frame.waitForSelector("table.table-striped.table-bordered");
+
+    const rows = await frame.$$eval(
+      "table.table-striped.table-bordered tbody tr",
+      (rows) => {
+        return rows.map((row) => {
+          const cells = row.querySelectorAll("td");
+          return Array.from(cells).map((cell) => cell.innerText);
+        });
+      }
+    );
+
+    const aliagaValues = rows[0];
+
+    console.log(aliagaValues);
+    res.json(aliagaValues);
+  } catch (error) {
+    console.log("Error", error);
+  }
+};
+
+exports.getTotalPrices = async (req, res) => {
+  try {
+    const { city } = req.body;
+    const upperCity = city.toUpperCase();
+    console.log(upperCity);
+    const browser = await puppeteer.launch({ headless: false });
+    const url = `${process.env.TOTAL_URI}`;
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
+
+    // Şehir seçiciyi bekleyin
+    await page.waitForSelector('select[name="cityID"]');
+
+    // Şehir değerini almak için seçiciyi kullanın
+    const cityValue = await page.evaluate((upperCity) => {
+      const options = Array.from(
+        document.querySelectorAll('select[name="cityID"] option')
+      );
+      const targetOption = options.find((option) =>
+        option.textContent.trim().includes(upperCity)
+      );
+      return targetOption ? targetOption.value : null;
+    }, upperCity);
+
+    if (cityValue) {
+      await page.evaluate((cityValue) => {
+        const event = new Event("change", { bubbles: true });
+        const selectElement = document.querySelector('select[name="cityID"]');
+        selectElement.value = cityValue;
+        selectElement.dispatchEvent(event);
+      }, cityValue);
+
+      await page.waitForSelector('table[border="1"]', { visible: true });
+      const prices = await page.evaluate((upperCity) => {
+        const rows = Array.from(
+          document.querySelectorAll('table[border="1"] tr')
+        );
+        const headerRow = rows.find(
+          (row) =>
+            row.querySelector("td").textContent.trim().toUpperCase() ===
+            upperCity
+        );
+        if (headerRow) {
+          const priceRow = headerRow.nextElementSibling; // başlık satırının hemen altına inmemizi sağlıyor
+          if (priceRow) {
+            return Array.from(priceRow.querySelectorAll("td:not(:first-child)"))
+              .map((td) => {
+                const text = td.textContent.trim();
+                const match = text.match(/\d+[\.,]?\d*/);
+                return match ? match[0] : null;
+              })
+              .filter((n) => n);
+          }
+        }
+        return [];
+      }, upperCity);
+
+      console.log(prices);
+    }
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+};
+
+// exports.getShellPrices = async (req, res) => {
+//   const { city } = req.body;
+//   try {
+//     const browser = await puppeteer.launch({ headless: false });
+//     const page = await browser.newPage();
+//     const url = process.env.SHELL_URI;
+//     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
+//     await page.waitForSelector(".evidon-banner-acceptbutton", {
+//       visible: true,
+//     });
+
+//     await page.click(".evidon-banner-acceptbutton");
+
+//     await new Promise((resolve) => setTimeout(resolve, 5000));
+
+//     const upperCaseCity = city.toUpperCase();
+//     const element = await page.$('#cb_all_cb_province_B-1');
+//     if (element) {
+//       const box = await element.boundingBox();
+//       // Elementin ortasına mousedown olayı göndermek için
+//       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+//       await page.mouse.down();
+//       // Eğer mouseup olayı da gerekiyorsa
+//       await page.mouse.up();
+//     } else {
+//       throw new Error('Element not found');
+//     }
+//   } catch (error) {
+//     console.log("Error", error);
+//   }
+// };
