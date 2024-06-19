@@ -119,6 +119,28 @@ const Index = () => {
             borderRadius: 15,
           }}
         />
+        <Image
+          source={{
+            uri: "https://cdnuploads.aa.com.tr/uploads/sirkethaberleri/Contents/2019/12/05/thumbs_b_c_0b2c7d09a483922cb8fb9d9c25cfa3c7.jpg",
+          }}
+          style={{
+            width: "100%",
+            height: 250,
+            resizeMode: "stretch",
+            borderRadius: 15,
+          }}
+        />
+         <Image
+          source={{
+            uri: "https://i.dunya.com/storage/files/images/2021/09/21/petrol-ofisi-bV0P_cover.jpg",
+          }}
+          style={{
+            width: "100%",
+            height: 250,
+            resizeMode: "stretch",
+            borderRadius: 15,
+          }}
+        />
       </View>
     </ScrollView>
   );
