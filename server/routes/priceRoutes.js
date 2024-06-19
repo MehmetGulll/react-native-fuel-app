@@ -7,5 +7,7 @@ router.post('/fetchBPPrice', priceControllers.getBPPrices);
 router.post('/fetchAlpetPrice', priceControllers.getAlpetPrices);
 router.post('/fetchKadoilPrice', priceControllers.getKadoilPrices)
 router.post('/fetchTotalPrice', priceControllers.getTotalPrices);
+router.post('/fetchPetrolOfisiPrice', priceControllers.getPetrolOfisiPrices);
+router.post('/fetchAytemizPrice',priceControllers.getAytemizPrices);
 
 module.exports = router;

@@ -176,7 +176,7 @@ exports.getKadoilPrices = async (req, res) => {
 
     const frameHandle = await page.$("#frame");
 
-    const frame = await frameHandle.contentFrame();
+    const frame = await frameHandle.contentFrame(); // diğer istediklerim iframe içinde oldugu için iframei aldım önce
 
     await frame.waitForSelector("#selectProvince");
 
@@ -215,10 +215,8 @@ exports.getTotalPrices = async (req, res) => {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
 
-    // Şehir seçiciyi bekleyin
     await page.waitForSelector('select[name="cityID"]');
 
-    // Şehir değerini almak için seçiciyi kullanın
     const cityValue = await page.evaluate((upperCity) => {
       const options = Array.from(
         document.querySelectorAll('select[name="cityID"] option')
@@ -266,6 +264,107 @@ exports.getTotalPrices = async (req, res) => {
     }
   } catch (error) {
     console.error("An error occurred:", error);
+  }
+};
+
+exports.getPetrolOfisiPrices = async (req, res) => {
+  try {
+    const { city } = req.body;
+    console.log(city);
+    const browser = await puppeteer.launch({ headless: false });
+    const url = `${process.env.PETROLOFISI_URI}`;
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
+
+    await page.evaluate((city) => {
+      const option = [
+        ...document.querySelectorAll(
+          ".form-select.form-control-lg.position-relative.zi-1.filter.filter_CityId.cities-dropdown option"
+        ),
+      ].find((opt) => opt.textContent.trim() === city);
+      if (option) {
+        option.selected = true;
+        const event = new Event("change", { bubbles: true }); // change yapma sebebimiz onchange yani selecti tetiklemsini sağlamak
+        option.dispatchEvent(event);
+      }
+    }, city);
+
+    console.log("Seçim yapıldı");
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const priceElements = await page.$$(
+      ".table-prices .price-row td span.with-tax"
+    );
+    const prices = await Promise.all(
+      priceElements.map(async (element) => {
+        const priceText = await element.evaluate((el) => el.textContent);
+        return parseFloat(priceText);
+      })
+    );
+
+    console.log("Fiyatlar:", prices);
+    res.json(prices.slice(0, 7));
+
+    console.log(prices.slice(0, 7));
+    await browser.close();
+  } catch (error) {
+    console.log("Hata", error);
+  }
+};
+
+exports.getAytemizPrices = async (req, res) => {
+  try {
+    const { city } = req.body;
+    console.log(city);
+
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+    await page.goto(process.env.AYTEMIZ_URI, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.click("#c-p-bn");
+
+    await page.waitForSelector(
+      'select[name="ctl00$ContentPlaceHolder1$C001$ddlCity"]'
+    );
+
+    await page.evaluate((city) => {
+      const citySelect = document.querySelector(
+        'select[name="ctl00$ContentPlaceHolder1$C001$ddlCity"]'
+      );
+      const option = [...citySelect.options].find(
+        (opt) => opt.textContent.trim() === city
+      );
+      if (option) {
+        option.selected = true;
+        const event = new Event("change", { bubbles: true });
+        citySelect.dispatchEvent(event);
+      }
+    }, city);
+
+    console.log(`${city} seçildi`);
+
+    await page.waitForSelector(
+      "table#fuel-price-table tbody tr td:not(:first-child)",
+      { visible: true }
+    ); // sayfa yenilenince beklesin diye konuldu
+
+    const priceElements = await page.$$(
+      "#fuel-price-table tbody tr td:not(:first-child)"
+    );
+
+    const prices = await Promise.all(
+      priceElements.map(async (element) => {
+        const priceText = await element.evaluate((el) => el.textContent);
+        return parseFloat(priceText.replace(",", "."));
+      })
+    );
+
+    console.log("Fiyatlar:", prices);
+    res.json(prices.slice(0, 4));
+  } catch (error) {
+    console.log("Hata:", error);
   }
 };
 
