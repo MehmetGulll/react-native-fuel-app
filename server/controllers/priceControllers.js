@@ -60,6 +60,7 @@ exports.getOpetPrices = async (req, res) => {
 };
 exports.getBPPrices = async (req, res) => {
   const { city } = req.body;
+  console.log("değer",city);
   try {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
@@ -125,7 +126,7 @@ exports.getBPPrices = async (req, res) => {
     const prices = await page.evaluate(() => {
       const rows = Array.from(document.querySelectorAll("tbody.pp-tbody tr"));
       return rows.map((row) => {
-        const cells = Array.from(row.querySelectorAll("td"));
+        const cells = Array.from(row.querySelectorAll("td")); // tek arraye dönüştürülecek
         return cells.map((cell) => cell.textContent.trim());
       });
     });
@@ -370,6 +371,7 @@ exports.getAytemizPrices = async (req, res) => {
 
 // exports.getShellPrices = async (req, res) => {
 //   const { city } = req.body;
+//   const upperCity = city.toUpperCase();
 //   try {
 //     const browser = await puppeteer.launch({ headless: false });
 //     const page = await browser.newPage();
@@ -381,20 +383,16 @@ exports.getAytemizPrices = async (req, res) => {
 
 //     await page.click(".evidon-banner-acceptbutton");
 
-//     await new Promise((resolve) => setTimeout(resolve, 5000));
-
-//     const upperCaseCity = city.toUpperCase();
-//     const element = await page.$('#cb_all_cb_province_B-1');
-//     if (element) {
-//       const box = await element.boundingBox();
-//       // Elementin ortasına mousedown olayı göndermek için
-//       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-//       await page.mouse.down();
-//       // Eğer mouseup olayı da gerekiyorsa
-//       await page.mouse.up();
-//     } else {
-//       throw new Error('Element not found');
-//     }
+//     await new Promise((resolve) => setTimeout(resolve, 2000));
+//     const frameHandle = await page.$(".iframed-app__iframe");
+//     const frame = await frameHandle.contentFrame(); // iframe içine ulaşmak için yapılır 
+//     await new Promise((resolve) => setTimeout(resolve, 2000));
+//     await frame.waitForSelector('.dxEditors_edtDropDown');
+//     console.log("tıklama bulundu");
+//     await frame.click('.dxEditors_edtDropDown');
+//     console.log("tıklandı");
+//     await new Promise((resolve) => setTimeout(resolve, 2000));
+  
 //   } catch (error) {
 //     console.log("Error", error);
 //   }
