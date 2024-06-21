@@ -130,8 +130,14 @@ exports.getBPPrices = async (req, res) => {
         return cells.map((cell) => cell.textContent.trim());
       });
     });
-    res.json(prices);
+    if(prices){
+      res.json(prices);
+    }else{
+      res.json("Petrol ofisi bulunmamaktadır!");
+    }
+  
     console.log("Alınan fiyatlar:", prices);
+    await browser.close();
   } catch (error) {
     console.log("Error", error);
   }
@@ -159,6 +165,7 @@ exports.getAlpetPrices = async (req, res) => {
   });
   res.json(prices);
   console.log(prices);
+  await browser.close();
 };
 
 exports.getKadoilPrices = async (req, res) => {
@@ -201,6 +208,7 @@ exports.getKadoilPrices = async (req, res) => {
 
     console.log(aliagaValues);
     res.json(aliagaValues);
+    await browser.close();
   } catch (error) {
     console.log("Error", error);
   }
@@ -260,8 +268,9 @@ exports.getTotalPrices = async (req, res) => {
         }
         return [];
       }, upperCity);
-
+      res.json(prices);
       console.log(prices);
+      await browser.close();
     }
   } catch (error) {
     console.error("An error occurred:", error);
@@ -364,6 +373,7 @@ exports.getAytemizPrices = async (req, res) => {
 
     console.log("Fiyatlar:", prices);
     res.json(prices.slice(0, 4));
+    await browser.close();
   } catch (error) {
     console.log("Hata:", error);
   }
