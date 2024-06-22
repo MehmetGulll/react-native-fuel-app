@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Image, ScrollView } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
+import MapView, { Polyline, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 
 const Index = () => {
   type City = {

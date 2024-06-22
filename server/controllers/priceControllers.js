@@ -60,7 +60,7 @@ exports.getOpetPrices = async (req, res) => {
 };
 exports.getBPPrices = async (req, res) => {
   const { city } = req.body;
-  console.log("değer",city);
+  console.log("değer", city);
   try {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
@@ -130,12 +130,12 @@ exports.getBPPrices = async (req, res) => {
         return cells.map((cell) => cell.textContent.trim());
       });
     });
-    if(prices){
+    if (prices) {
       res.json(prices);
-    }else{
+    } else {
       res.json("Petrol ofisi bulunmamaktadır!");
     }
-  
+
     console.log("Alınan fiyatlar:", prices);
     await browser.close();
   } catch (error) {
@@ -378,6 +378,67 @@ exports.getAytemizPrices = async (req, res) => {
     console.log("Hata:", error);
   }
 };
+exports.getShellPrices = async (req, res) => {
+  const { city } = req.body;
+  const upperCity = city.toUpperCase();
+  try {
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+    const url = process.env.SHELL_URI;
+    await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
+    await page.waitForSelector(".evidon-banner-acceptbutton", {
+      visible: true,
+    });
+
+    await page.click(".evidon-banner-acceptbutton");
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const frameHandle = await page.$(".iframed-app__iframe");
+    const frame = await frameHandle.contentFrame();
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 60000 });
+    console.log("tıklama bulundu");
+    await frame.click(".dxEditors_edtDropDown");
+    console.log("tıklandı");
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const options = await frame.$$(".dxeListBoxItem");
+    for (const option of options) {
+      const optionText = await option.evaluate((el) => el.textContent);
+      if (optionText.toUpperCase() === upperCity) {
+        await option.click();
+        break;
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    const rows = await frame.$$(".dxgvDataRow");
+    const data = [];
+
+    for (const row of rows) {
+      const cells = await row.$$("td");
+
+      if (cells.length > 2) {
+        const cityName = await cells[0].evaluate((el) => el.textContent.trim());
+        const price1 = await cells[1].evaluate((el) => el.textContent.trim());
+        const price2 = await cells[2].evaluate((el) => el.textContent.trim());
+
+        data.push({ cityName, price1, price2 });
+      } else {
+        console.log('Expected at least 3 cells in the row, but found:', cells.length);
+      }
+    }
+
+    await browser.close();
+    res.json({ data });
+
+  } catch (error) {
+    console.log("Hata", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 // exports.getShellPrices = async (req, res) => {
 //   const { city } = req.body;
@@ -395,14 +456,14 @@ exports.getAytemizPrices = async (req, res) => {
 
 //     await new Promise((resolve) => setTimeout(resolve, 2000));
 //     const frameHandle = await page.$(".iframed-app__iframe");
-//     const frame = await frameHandle.contentFrame(); // iframe içine ulaşmak için yapılır 
+//     const frame = await frameHandle.contentFrame(); // iframe içine ulaşmak için yapılır
 //     await new Promise((resolve) => setTimeout(resolve, 2000));
 //     await frame.waitForSelector('.dxEditors_edtDropDown');
 //     console.log("tıklama bulundu");
 //     await frame.click('.dxEditors_edtDropDown');
 //     console.log("tıklandı");
 //     await new Promise((resolve) => setTimeout(resolve, 2000));
-  
+
 //   } catch (error) {
 //     console.log("Error", error);
 //   }
