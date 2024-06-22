@@ -386,20 +386,40 @@ exports.getShellPrices = async (req, res) => {
     const page = await browser.newPage();
     const url = process.env.SHELL_URI;
     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
-    await page.waitForSelector(".evidon-banner-acceptbutton", {
-      visible: true,
-    });
 
+    console.log("Page loaded");
+
+    await page.waitForSelector(".evidon-banner-acceptbutton", { visible: true });
     await page.click(".evidon-banner-acceptbutton");
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
+
     const frameHandle = await page.$(".iframed-app__iframe");
     const frame = await frameHandle.contentFrame();
+    
+    console.log("Frame found");
+
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 60000 });
-    console.log("tıklama bulundu");
+
+    let dropdownLoaded = false;
+    for (let i = 0; i < 5; i++) { // 5 retries
+      try {
+        await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 15000 });
+        console.log("Dropdown found");
+        dropdownLoaded = true;
+        break;
+      } catch (error) {
+        console.log("Dropdown not found, retrying...");
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // wait 3 seconds before retrying
+      }
+    }
+
+    if (!dropdownLoaded) {
+      throw new Error("Dropdown could not be loaded after multiple attempts");
+    }
+
     await frame.click(".dxEditors_edtDropDown");
-    console.log("tıklandı");
+    console.log("Dropdown clicked");
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const options = await frame.$$(".dxeListBoxItem");
@@ -407,6 +427,7 @@ exports.getShellPrices = async (req, res) => {
       const optionText = await option.evaluate((el) => el.textContent);
       if (optionText.toUpperCase() === upperCity) {
         await option.click();
+        console.log(`Option for city ${upperCity} clicked`);
         break;
       }
     }
@@ -440,31 +461,4 @@ exports.getShellPrices = async (req, res) => {
 };
 
 
-// exports.getShellPrices = async (req, res) => {
-//   const { city } = req.body;
-//   const upperCity = city.toUpperCase();
-//   try {
-//     const browser = await puppeteer.launch({ headless: false });
-//     const page = await browser.newPage();
-//     const url = process.env.SHELL_URI;
-//     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
-//     await page.waitForSelector(".evidon-banner-acceptbutton", {
-//       visible: true,
-//     });
 
-//     await page.click(".evidon-banner-acceptbutton");
-
-//     await new Promise((resolve) => setTimeout(resolve, 2000));
-//     const frameHandle = await page.$(".iframed-app__iframe");
-//     const frame = await frameHandle.contentFrame(); // iframe içine ulaşmak için yapılır
-//     await new Promise((resolve) => setTimeout(resolve, 2000));
-//     await frame.waitForSelector('.dxEditors_edtDropDown');
-//     console.log("tıklama bulundu");
-//     await frame.click('.dxEditors_edtDropDown');
-//     console.log("tıklandı");
-//     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-//   } catch (error) {
-//     console.log("Error", error);
-//   }
-// };
