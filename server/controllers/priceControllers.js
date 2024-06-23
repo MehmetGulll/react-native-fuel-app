@@ -157,18 +157,26 @@ exports.getAlpetPrices = async (req, res) => {
   await page.click(".cc-btn");
   console.log("butona basıldı");
   console.log(url);
-  
+
   const prices = await page.$$eval("tbody tr", (rows) => {
     return rows.map((row) => {
       const columns = row.querySelectorAll("td");
-      const price1 = parseFloat(columns[2].innerText.trim().replace(/ TL\/LT$/, "").replace(/,/g, '.'));
-      const price2 = parseFloat(columns[3].innerText.trim().replace(/ TL\/LT$/, "").replace(/,/g, '.'));
+      const price1 = parseFloat(
+        columns[2].innerText
+          .trim()
+          .replace(/ TL\/LT$/, "")
+          .replace(/,/g, ".")
+      );
+      const price2 = parseFloat(
+        columns[3].innerText
+          .trim()
+          .replace(/ TL\/LT$/, "")
+          .replace(/,/g, ".")
+      );
       return [price1, price2];
     });
   });
 
-
-  
   res.json(prices);
   console.log(prices);
   await browser.close();
@@ -267,14 +275,14 @@ exports.getTotalPrices = async (req, res) => {
               .map((td) => {
                 const text = td.textContent.trim();
                 const match = text.match(/\d+[\.,]?\d*/);
-                return match ? match[0].replace(/,/g, '.') : null;
+                return match ? match[0].replace(/,/g, ".") : null;
               })
               .filter((n) => n);
           }
         }
         return [];
       }, upperCity);
-      
+
       res.json(prices);
       console.log(prices);
       await browser.close();
@@ -385,6 +393,7 @@ exports.getAytemizPrices = async (req, res) => {
     console.log("Hata:", error);
   }
 };
+
 exports.getShellPrices = async (req, res) => {
   const { city } = req.body;
   const upperCity = city.toUpperCase();
@@ -393,44 +402,13 @@ exports.getShellPrices = async (req, res) => {
     const page = await browser.newPage();
     const url = process.env.SHELL_URI;
     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
-
-    console.log("Page loaded");
-
-    await page.waitForSelector(".evidon-banner-acceptbutton", { visible: true });
-    await page.click(".evidon-banner-acceptbutton");
-
+    console.log("Sayfa açıldı");
+    await page.waitForSelector(".dxEditors_edtDropDown");
+    console.log("dropdown bulundu");
+    await page.click(".dxEditors_edtDropDown");
     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const frameHandle = await page.$(".iframed-app__iframe");
-    const frame = await frameHandle.contentFrame();
-    
-    console.log("Frame found");
-    await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 90000});
-
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    await frame.click(".dxEditors_edtDropDown");
-    // let dropdownLoaded = false;
-    // for (let i = 0; i < 5; i++) { // 5 retries
-    //   try {
-    //     await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 15000 });
-    //     console.log("Dropdown found");
-    //     dropdownLoaded = true;
-    //     break;
-    //   } catch (error) {
-    //     console.log("Dropdown not found, retrying...");
-    //     await new Promise((resolve) => setTimeout(resolve, 3000)); // wait 3 seconds before retrying
-    //   }
-    // }
-
-    // if (!dropdownLoaded) {
-    //   throw new Error("Dropdown could not be loaded after multiple attempts");
-    // }
-
-    
-    console.log("Dropdown clicked");
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const options = await frame.$$(".dxeListBoxItem");
+    console.log("tıklandı");
+    const options = await page.$$(".dxeListBoxItem");
     for (const option of options) {
       const optionText = await option.evaluate((el) => el.textContent);
       if (optionText.toUpperCase() === upperCity) {
@@ -439,12 +417,10 @@ exports.getShellPrices = async (req, res) => {
         break;
       }
     }
-
+    console.log("şehir bulundu ve tıklandı");
     await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    const rows = await frame.$$(".dxgvDataRow");
+    const rows = await page.$$(".dxgvDataRow");
     const data = [];
-
     for (const row of rows) {
       const cells = await row.$$("td");
 
@@ -455,18 +431,97 @@ exports.getShellPrices = async (req, res) => {
 
         data.push({ cityName, price1, price2 });
       } else {
-        console.log('Expected at least 3 cells in the row, but found:', cells.length);
+        console.log(
+          "değerler",
+          cells.length
+        );
       }
     }
 
     await browser.close();
     res.json({ data });
-
   } catch (error) {
-    console.log("Hata", error);
-    res.status(500).json({ error: error.message });
+    console.log("Error", error);
   }
 };
+// exports.getShellPrices = async (req, res) => {
+//   const { city } = req.body;
+//   const upperCity = city.toUpperCase();
+//   try {
+//     const browser = await puppeteer.launch({ headless: false });
+//     const page = await browser.newPage();
+//     const url = process.env.SHELL_URI;
+//     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
 
+//     console.log("Page loaded");
 
+//     await page.waitForSelector(".evidon-banner-acceptbutton", { visible: true });
+//     await page.click(".evidon-banner-acceptbutton");
 
+//     await new Promise((resolve) => setTimeout(resolve, 2000));
+
+//     const frameHandle = await page.$(".iframed-app__iframe");
+//     const frame = await frameHandle.contentFrame();
+
+//     console.log("Frame found");
+//     await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 90000});
+
+//     await new Promise((resolve) => setTimeout(resolve, 2000));
+//     await frame.click(".dxEditors_edtDropDown");
+//     // let dropdownLoaded = false;
+//     // for (let i = 0; i < 5; i++) { // 5 retries
+//     //   try {
+//     //     await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 15000 });
+//     //     console.log("Dropdown found");
+//     //     dropdownLoaded = true;
+//     //     break;
+//     //   } catch (error) {
+//     //     console.log("Dropdown not found, retrying...");
+//     //     await new Promise((resolve) => setTimeout(resolve, 3000)); // wait 3 seconds before retrying
+//     //   }
+//     // }
+
+//     // if (!dropdownLoaded) {
+//     //   throw new Error("Dropdown could not be loaded after multiple attempts");
+//     // }
+
+//     console.log("Dropdown clicked");
+//     await new Promise((resolve) => setTimeout(resolve, 2000));
+
+//     const options = await frame.$$(".dxeListBoxItem");
+//     for (const option of options) {
+//       const optionText = await option.evaluate((el) => el.textContent);
+//       if (optionText.toUpperCase() === upperCity) {
+//         await option.click();
+//         console.log(`Option for city ${upperCity} clicked`);
+//         break;
+//       }
+//     }
+
+//     await new Promise((resolve) => setTimeout(resolve, 3000));
+
+//     const rows = await frame.$$(".dxgvDataRow");
+//     const data = [];
+
+//     for (const row of rows) {
+//       const cells = await row.$$("td");
+
+//       if (cells.length > 2) {
+//         const cityName = await cells[0].evaluate((el) => el.textContent.trim());
+//         const price1 = await cells[1].evaluate((el) => el.textContent.trim());
+//         const price2 = await cells[2].evaluate((el) => el.textContent.trim());
+
+//         data.push({ cityName, price1, price2 });
+//       } else {
+//         console.log('Expected at least 3 cells in the row, but found:', cells.length);
+//       }
+//     }
+
+//     await browser.close();
+//     res.json({ data });
+
+//   } catch (error) {
+//     console.log("Hata", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
