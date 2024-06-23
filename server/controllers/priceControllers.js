@@ -157,12 +157,18 @@ exports.getAlpetPrices = async (req, res) => {
   await page.click(".cc-btn");
   console.log("butona basıldı");
   console.log(url);
+  
   const prices = await page.$$eval("tbody tr", (rows) => {
     return rows.map((row) => {
       const columns = row.querySelectorAll("td");
-      return Array.from(columns, (column) => column.innerText.trim());
+      const price1 = parseFloat(columns[2].innerText.trim().replace(/ TL\/LT$/, "").replace(/,/g, '.'));
+      const price2 = parseFloat(columns[3].innerText.trim().replace(/ TL\/LT$/, "").replace(/,/g, '.'));
+      return [price1, price2];
     });
   });
+
+
+  
   res.json(prices);
   console.log(prices);
   await browser.close();
@@ -255,19 +261,20 @@ exports.getTotalPrices = async (req, res) => {
             upperCity
         );
         if (headerRow) {
-          const priceRow = headerRow.nextElementSibling; // başlık satırının hemen altına inmemizi sağlıyor
+          const priceRow = headerRow.nextElementSibling;
           if (priceRow) {
             return Array.from(priceRow.querySelectorAll("td:not(:first-child)"))
               .map((td) => {
                 const text = td.textContent.trim();
                 const match = text.match(/\d+[\.,]?\d*/);
-                return match ? match[0] : null;
+                return match ? match[0].replace(/,/g, '.') : null;
               })
               .filter((n) => n);
           }
         }
         return [];
       }, upperCity);
+      
       res.json(prices);
       console.log(prices);
       await browser.close();
@@ -398,27 +405,28 @@ exports.getShellPrices = async (req, res) => {
     const frame = await frameHandle.contentFrame();
     
     console.log("Frame found");
+    await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 90000});
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    let dropdownLoaded = false;
-    for (let i = 0; i < 5; i++) { // 5 retries
-      try {
-        await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 15000 });
-        console.log("Dropdown found");
-        dropdownLoaded = true;
-        break;
-      } catch (error) {
-        console.log("Dropdown not found, retrying...");
-        await new Promise((resolve) => setTimeout(resolve, 3000)); // wait 3 seconds before retrying
-      }
-    }
-
-    if (!dropdownLoaded) {
-      throw new Error("Dropdown could not be loaded after multiple attempts");
-    }
-
     await frame.click(".dxEditors_edtDropDown");
+    // let dropdownLoaded = false;
+    // for (let i = 0; i < 5; i++) { // 5 retries
+    //   try {
+    //     await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 15000 });
+    //     console.log("Dropdown found");
+    //     dropdownLoaded = true;
+    //     break;
+    //   } catch (error) {
+    //     console.log("Dropdown not found, retrying...");
+    //     await new Promise((resolve) => setTimeout(resolve, 3000)); // wait 3 seconds before retrying
+    //   }
+    // }
+
+    // if (!dropdownLoaded) {
+    //   throw new Error("Dropdown could not be loaded after multiple attempts");
+    // }
+
+    
     console.log("Dropdown clicked");
     await new Promise((resolve) => setTimeout(resolve, 2000));
 

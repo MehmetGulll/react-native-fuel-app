@@ -1,8 +1,13 @@
-import React from "react";
-import { Stack } from "expo-router";
-import { Image, View, Text } from "react-native";
+import React from 'react';
+import { View, Text, Image } from 'react-native';
+import { Stack } from 'expo-router';
 
 export default function RootLayout() {
+  const text = "Akaryakıt Fiyatları";
+  const colors = ["#ffda00", "#0033A0", "#3E732B", "#0054A6", "#EF4135", "#DB0011"];
+
+  const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
+
   return (
     <Stack>
       <Stack.Screen
@@ -17,17 +22,24 @@ export default function RootLayout() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ marginLeft: 10 }}>Akaryakıt Fiyatları</Text>
+              <View style={{ flexDirection: "row", marginLeft: 18 }}>
+                {text.split("").map((char, index) => (
+                  <Text key={index} style={{ color: getRandomColor(), marginRight: 5, fontSize:18 }}>
+                    {char}
+                  </Text>
+                ))}
+              </View>
               <Image
-                source={{
-                  uri: "https://t4.ftcdn.net/jpg/04/53/22/29/360_F_453222994_qtL8s7Ti8JEQ9FDoWGrgvlG2XRKtfFhE.jpg",
-                }}
+                source={require('../assets/images/fuelLogo.png')
+                 
+                }
                 style={{
                   width: 70,
                   height: 70,
                   resizeMode: "contain",
-                  marginLeft: 180,
-                  backgroundColor: "#FFF5EE",
+                  marginLeft: 38,
+               
+                  
                 }}
               />
             </View>
