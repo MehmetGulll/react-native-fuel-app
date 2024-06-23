@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView } from "react-native";
+import { View, Text, Image, ScrollView, ActivityIndicator } from "react-native";
 import styles from "./indexStyle";
 import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
@@ -19,10 +19,18 @@ const Index = () => {
   const [alpetPrice, setAlpetPrice] = useState("");
   const [totalPrice, setTotalPrice] = useState("");
   const [aytemizPrice, setAytemizPrice] = useState("");
-  const [petroOfisiPrice, setPetrolOfisiPrice] = useState("");
+  const [petrolOfisiPrice, setPetrolOfisiPrice] = useState("");
   const [shellPrice, setShellPrice] = useState("");
   const [shellBenzinPrice, setShellBenzinPrice] = useState("");
   const [shellDizelPrice, setShellDizelPrice] = useState("");
+  const [loadingOpet, setLoadingOpet] = useState(false);
+  const [loadingBp, setLoadingBp] = useState(false);
+  const [loadingKadoil, setLoadingKadoil] = useState(false);
+  const [loadingAlpet, setLoadingAlpet] = useState(false);
+  const [loadingTotal, setLoadingTotal] = useState(false);
+  const [loadingAytemiz, setLoadingAytemiz] = useState(false);
+  const [loadingPetrolOfisi, setLoadingPetrolOfisi] = useState(false);
+  const [loadingShell, setLoadingShell] = useState(false);
   useEffect(() => {
     const fetchCities = async () => {
       try {
@@ -66,9 +74,9 @@ const Index = () => {
   };
 
   const fetchBPData = async (city: string) => {
-    
     let lowerCity = city.toLocaleLowerCase("tr-TR");
     setBpPrice("");
+    setLoadingBp(true);
     try {
       if (lowerCity === "istanbul") {
         lowerCity = "istanbul (avrupa)";
@@ -92,11 +100,14 @@ const Index = () => {
       }
     } catch (error) {
       console.log("Error", error);
+    } finally {
+      setLoadingBp(false);
     }
   };
   const fetchKadoilData = async (city: string) => {
     let lowerCity = city.toLocaleLowerCase("tr-TR");
     setKadoiPrice("");
+    setLoadingKadoil(true);
     try {
       const kadoilResponse = await axios.post(
         `${process.env.EXPO_PUBLIC_KADOIL_HOST}`,
@@ -112,29 +123,35 @@ const Index = () => {
       }
     } catch (error) {
       console.log("Error", error);
+    } finally {
+      setLoadingKadoil(false);
     }
   };
   const fetchAlpetData = async (city: string) => {
     let lowerCity = city.toLocaleLowerCase("tr-TR");
     setAlpetPrice("");
+    setLoadingAlpet(true);
     try {
       const alpetPrice = await axios.post(
         `${process.env.EXPO_PUBLIC_ALPET_HOST}`,
         { city: lowerCity }
       );
       if (alpetPrice.data) {
-        console.log("alpet verileri", alpetPrice.data);
+        console.log("alpet verileri", alpetPrice.data[0]);
         setAlpetPrice(alpetPrice.data);
       } else {
         console.log("Petrol ofisi bulunmamaktadır!.");
       }
     } catch (error) {
       console.log("Error", error);
+    } finally {
+      setLoadingAlpet(false);
     }
   };
   const fetchTotalData = async (city: string) => {
     let lowerCity = city.toLocaleLowerCase("tr-TR");
     setTotalPrice("");
+    setLoadingTotal(true);
     try {
       const totalPrice = await axios.post(
         `${process.env.EXPO_PUBLIC_TOTAL_HOST}`,
@@ -150,11 +167,14 @@ const Index = () => {
       }
     } catch (error) {
       console.log("Error", error);
+    } finally {
+      setLoadingTotal(false);
     }
   };
   const fetchAytemizData = async (city: string) => {
     let lowerCity = city.toLocaleLowerCase("tr-TR");
     setAytemizPrice("");
+    setLoadingAytemiz(true);
     try {
       const aytemizResponse = await axios.post(
         `${process.env.EXPO_PUBLIC_AYTEMIZ_HOST}`,
@@ -168,11 +188,14 @@ const Index = () => {
       }
     } catch (error) {
       console.log("Error", error);
+    } finally {
+      setLoadingAytemiz(false);
     }
   };
-  const fetchPetrolofisiData = async(city:string) =>{
+  const fetchPetrolofisiData = async (city: string) => {
     let lowerCity = city.toLocaleLowerCase("tr-TR");
     setPetrolOfisiPrice("");
+    setLoadingPetrolOfisi(true);
     try {
       console.log(lowerCity);
       const petrolOfisiResponse = await axios.post(
@@ -184,14 +207,20 @@ const Index = () => {
         console.log("petrol ofisi verileri:", petrolOfisiResponse.data);
       }
     } catch (error) {
-      console.log("Error",error);
+      console.log("Error", error);
+    } finally {
+      setLoadingPetrolOfisi(false);
     }
-  }
-  const fetchShellData = async(city:string) =>{
+  };
+  const fetchShellData = async (city: string) => {
     let lowerCity = city.toLocaleLowerCase("tr-TR");
     setShellPrice("");
     setShellBenzinPrice("");
     setShellDizelPrice("");
+    setLoadingShell(true);
+    if (lowerCity === "ığdır") {
+      lowerCity = "ıgdır";
+    }
     try {
       const shellResponse = await axios.post(
         `${process.env.EXPO_PUBLIC_SHELL_HOST}`,
@@ -214,25 +243,41 @@ const Index = () => {
         }
       }
     } catch (error) {
-      console.log("Error",error);
+      console.log("Error", error);
+    } finally {
+      setLoadingShell(false);
     }
-  }
+  };
 
   const handleCitySelect = async (selectedCity: string) => {
     console.log("seçilen şehir", selectedCity);
-    const opetPrice = await fetchOpetData(selectedCity);
-    const bpPrice = await fetchBPData(selectedCity);
-    const kadoilPrice = await fetchKadoilData(selectedCity);
-    const alpetPrice = await fetchAlpetData(selectedCity);
-    const totalPrice = await fetchTotalData(selectedCity);
-    const aytemizPrice = await fetchAytemizData(selectedCity);
-    const petrolOfisiPrice = await fetchPetrolofisiData(selectedCity);
-    const shellPrice = await fetchShellData(selectedCity);
-  
+    try {
+      const [
+        opetPrice,
+        bpPrice,
+        kadoilPrice,
+        alpetPrice,
+        totalPrice,
+        aytemizPrice,
+        petrolOfisiPrice,
+        shellPrice,
+      ] = await Promise.all([
+        fetchOpetData(selectedCity),
+        fetchBPData(selectedCity),
+        fetchKadoilData(selectedCity),
+        fetchAlpetData(selectedCity),
+        fetchTotalData(selectedCity),
+        fetchAytemizData(selectedCity),
+        fetchPetrolofisiData(selectedCity),
+        fetchShellData(selectedCity),
+      ]);
+    } catch (error) {
+      console.log("Error", error);
+    }
   };
   return (
     <ScrollView>
-      <View style = {{ alignItems:'center', marginTop:10}}>
+      <View style={{ alignItems: "center", marginTop: 10 }}>
         <Text>Fiyatlar ortalamadır değişiklik gösterebilir.</Text>
       </View>
       <View
@@ -243,7 +288,11 @@ const Index = () => {
           marginHorizontal: 32,
         }}
       >
-        <RNPickerSelect onValueChange={handleCitySelect} items={cities} placeholder={{ label: "Şehir seçiniz...", value: null }} />
+        <RNPickerSelect
+          onValueChange={handleCitySelect}
+          items={cities}
+          placeholder={{ label: "Şehir seçiniz...", value: null }}
+        />
       </View>
       <View
         style={{
@@ -262,11 +311,19 @@ const Index = () => {
           />
           <View style={styles.oilTitleTextContainer}>
             <Text style={[styles.oilText, { color: "#ffda00" }]}>Shell</Text>
-            {shellPrice.length > 0 && (
+            {loadingShell ? (
+              <ActivityIndicator size="small" color="#0054A6" />
+            ) : shellPrice.length > 0 ? (
               <View>
-                <Text style = {styles.oilPriceText}>Benzin: {shellBenzinPrice}</Text>
-                <Text style = {styles.oilPriceText}>Motorin: {shellDizelPrice}</Text>
+                <Text style={styles.oilPriceText}>
+                  Benzin: {shellBenzinPrice}
+                </Text>
+                <Text style={styles.oilPriceText}>
+                  Motorin: {shellDizelPrice}
+                </Text>
               </View>
+            ) : (
+              <Text></Text>
             )}
           </View>
         </View>
@@ -279,12 +336,16 @@ const Index = () => {
           />
           <View style={styles.oilTitleTextContainer}>
             <Text style={[styles.oilText, { color: "#0033A0" }]}>Opet</Text>
-            {opetPrice.length > 0 && (
+            {loadingOpet ? (
+              <ActivityIndicator size="small" color="#0054A6" />
+            ) : opetPrice.length > 0 ? (
               <View>
-                <Text style = {styles.oilPriceText}>Benzin: {opetPrice[0]} </Text>
-                <Text style = {styles.oilPriceText}>Motorin: {opetPrice[1]}</Text>
-                <Text style = {styles.oilPriceText}>Otogaz: {opetPrice[2]}</Text>
+                <Text style={styles.oilPriceText}>Benzin: {opetPrice[0]} </Text>
+                <Text style={styles.oilPriceText}>Motorin: {opetPrice[1]}</Text>
+                <Text style={styles.oilPriceText}>Otogaz: {opetPrice[2]}</Text>
               </View>
+            ) : (
+              <Text></Text>
             )}
           </View>
         </View>
@@ -297,12 +358,19 @@ const Index = () => {
           />
           <View style={styles.oilTitleTextContainer}>
             <Text style={[styles.oilText, { color: "#3E732B" }]}>BP</Text>
-            {bpPrice.length > 0 && (
+            {loadingBp ? (
+              <ActivityIndicator size="small" color="#0054A6" />
+            ) : bpPrice.length > 0 ? (
               <View>
-                <Text style = {styles.oilPriceText}>Benzin: {bpPrice[0][2]} </Text>
-                <Text style = {styles.oilPriceText}>Motorin: {bpPrice[0][3]}</Text>
-                
+                <Text style={styles.oilPriceText}>
+                  Benzin: {bpPrice[0][2]}{" "}
+                </Text>
+                <Text style={styles.oilPriceText}>
+                  Motorin: {bpPrice[0][3]}
+                </Text>
               </View>
+            ) : (
+              <Text></Text>
             )}
           </View>
         </View>
@@ -315,11 +383,19 @@ const Index = () => {
           />
           <View style={styles.oilTitleTextContainer}>
             <Text style={[styles.oilText, { color: "#0054A6" }]}>Kadoil</Text>
-            {kadoilPrice.length > 0 && (
+            {loadingKadoil ? (
+              <ActivityIndicator size="small" color="#0054A6" />
+            ) : kadoilPrice.length > 0 ? (
               <View>
-                <Text style = {styles.oilPriceText}>Benzin: {kadoilPrice[1]} </Text>
-                <Text style = {styles.oilPriceText}>Motorin: {kadoilPrice[2]}</Text>
+                <Text style={styles.oilPriceText}>
+                  Benzin: {kadoilPrice[1]}
+                </Text>
+                <Text style={styles.oilPriceText}>
+                  Motorin: {kadoilPrice[2]}
+                </Text>
               </View>
+            ) : (
+              <Text></Text>
             )}
           </View>
         </View>
@@ -332,11 +408,19 @@ const Index = () => {
           />
           <View style={styles.oilTitleTextContainer}>
             <Text style={[styles.oilText, { color: "#0054A6" }]}>Alpet</Text>
-            {alpetPrice.length > 0 && (
+            {loadingAlpet ? (
+              <ActivityIndicator size="small" color="#0054A6" />
+            ) : alpetPrice.length > 0 ? (
               <View>
-                <Text style = {styles.oilPriceText}>Benzin: {alpetPrice[0][2]} </Text>
-                <Text style = {styles.oilPriceText}>Motorin: {alpetPrice[0][4]}</Text>
+                <Text style={styles.oilPriceText}>
+                  Benzin: {alpetPrice[0][0]}
+                </Text>
+                <Text style={styles.oilPriceText}>
+                  Motorin: {alpetPrice[1][0]}
+                </Text>
               </View>
+            ) : (
+              <Text></Text>
             )}
           </View>
         </View>
@@ -349,11 +433,19 @@ const Index = () => {
           />
           <View style={styles.oilTitleTextContainer}>
             <Text style={[styles.oilText, { color: "#EF4135" }]}>Total</Text>
-            {totalPrice.length > 0 && (
+            {loadingTotal ? (
+              <ActivityIndicator size="small" color="#0054A6" />
+            ) : totalPrice.length > 0 ? (
               <View>
-                <Text style = {styles.oilPriceText}>Benzin: {totalPrice[0]} </Text>
-                <Text style = {styles.oilPriceText}>Motorin: {totalPrice[2]}</Text>
+                <Text style={styles.oilPriceText}>
+                  Benzin: {totalPrice[0]}{" "}
+                </Text>
+                <Text style={styles.oilPriceText}>
+                  Motorin: {totalPrice[2]}
+                </Text>
               </View>
+            ) : (
+              <Text></Text>
             )}
           </View>
         </View>
@@ -366,11 +458,19 @@ const Index = () => {
           />
           <View style={styles.oilTitleTextContainer}>
             <Text style={[styles.oilText, { color: "#EF4135" }]}>Aytemiz</Text>
-            {aytemizPrice.length > 0 && (
+            {loadingAytemiz ? (
+              <ActivityIndicator size="small" color="#0054A6" />
+            ) : aytemizPrice.length > 0 ? (
               <View>
-                <Text style = {styles.oilPriceText}>Benzin: {aytemizPrice[0]} </Text>
-                <Text style = {styles.oilPriceText}>Motorin: {aytemizPrice[1]}</Text>
+                <Text style={styles.oilPriceText}>
+                  Benzin: {aytemizPrice[0]}{" "}
+                </Text>
+                <Text style={styles.oilPriceText}>
+                  Motorin: {aytemizPrice[1]}
+                </Text>
               </View>
+            ) : (
+              <Text></Text>
             )}
           </View>
         </View>
@@ -385,11 +485,19 @@ const Index = () => {
             <Text style={[styles.oilText, { color: "#DB0011" }]}>
               Petrol Ofisi
             </Text>
-            {aytemizPrice.length > 0 && (
+            {loadingPetrolOfisi ? (
+              <ActivityIndicator size="small" color="#0054A6" />
+            ) : petrolOfisiPrice.length > 0 ? (
               <View>
-                <Text style = {styles.oilPriceText}>Benzin: {petroOfisiPrice[0]} </Text>
-                <Text style = {styles.oilPriceText}>Motorin: {petroOfisiPrice[1]}</Text>
+                <Text style={styles.oilPriceText}>
+                  Benzin: {petrolOfisiPrice[0]}{" "}
+                </Text>
+                <Text style={styles.oilPriceText}>
+                  Motorin: {petrolOfisiPrice[1]}
+                </Text>
               </View>
+            ) : (
+              <Text></Text>
             )}
           </View>
         </View>

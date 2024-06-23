@@ -404,10 +404,10 @@ exports.getShellPrices = async (req, res) => {
     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
     console.log("Sayfa açıldı");
     await page.waitForSelector(".dxEditors_edtDropDown");
-    console.log("dropdown bulundu");
+    console.log("Dropdown bulundu");
     await page.click(".dxEditors_edtDropDown");
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("tıklandı");
+    console.log("Tıklandı");
     const options = await page.$$(".dxeListBoxItem");
     for (const option of options) {
       const optionText = await option.evaluate((el) => el.textContent);
@@ -417,7 +417,7 @@ exports.getShellPrices = async (req, res) => {
         break;
       }
     }
-    console.log("şehir bulundu ve tıklandı");
+    console.log("Şehir bulundu ve tıklandı");
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const rows = await page.$$(".dxgvDataRow");
     const data = [];
@@ -426,102 +426,20 @@ exports.getShellPrices = async (req, res) => {
 
       if (cells.length > 2) {
         const cityName = await cells[0].evaluate((el) => el.textContent.trim());
-        const price1 = await cells[1].evaluate((el) => el.textContent.trim());
-        const price2 = await cells[2].evaluate((el) => el.textContent.trim());
+        const price1 = await cells[1].evaluate((el) => el.textContent.trim().replace(",", "."));
+        const price2 = await cells[2].evaluate((el) => el.textContent.trim().replace(",", "."));
 
         data.push({ cityName, price1, price2 });
       } else {
-        console.log(
-          "değerler",
-          cells.length
-        );
+        console.log("Değerler:", cells.length);
       }
     }
 
     await browser.close();
     res.json({ data });
   } catch (error) {
-    console.log("Error", error);
+    console.log("Hata", error);
   }
 };
-// exports.getShellPrices = async (req, res) => {
-//   const { city } = req.body;
-//   const upperCity = city.toUpperCase();
-//   try {
-//     const browser = await puppeteer.launch({ headless: false });
-//     const page = await browser.newPage();
-//     const url = process.env.SHELL_URI;
-//     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
 
-//     console.log("Page loaded");
 
-//     await page.waitForSelector(".evidon-banner-acceptbutton", { visible: true });
-//     await page.click(".evidon-banner-acceptbutton");
-
-//     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-//     const frameHandle = await page.$(".iframed-app__iframe");
-//     const frame = await frameHandle.contentFrame();
-
-//     console.log("Frame found");
-//     await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 90000});
-
-//     await new Promise((resolve) => setTimeout(resolve, 2000));
-//     await frame.click(".dxEditors_edtDropDown");
-//     // let dropdownLoaded = false;
-//     // for (let i = 0; i < 5; i++) { // 5 retries
-//     //   try {
-//     //     await frame.waitForSelector(".dxEditors_edtDropDown", { timeout: 15000 });
-//     //     console.log("Dropdown found");
-//     //     dropdownLoaded = true;
-//     //     break;
-//     //   } catch (error) {
-//     //     console.log("Dropdown not found, retrying...");
-//     //     await new Promise((resolve) => setTimeout(resolve, 3000)); // wait 3 seconds before retrying
-//     //   }
-//     // }
-
-//     // if (!dropdownLoaded) {
-//     //   throw new Error("Dropdown could not be loaded after multiple attempts");
-//     // }
-
-//     console.log("Dropdown clicked");
-//     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-//     const options = await frame.$$(".dxeListBoxItem");
-//     for (const option of options) {
-//       const optionText = await option.evaluate((el) => el.textContent);
-//       if (optionText.toUpperCase() === upperCity) {
-//         await option.click();
-//         console.log(`Option for city ${upperCity} clicked`);
-//         break;
-//       }
-//     }
-
-//     await new Promise((resolve) => setTimeout(resolve, 3000));
-
-//     const rows = await frame.$$(".dxgvDataRow");
-//     const data = [];
-
-//     for (const row of rows) {
-//       const cells = await row.$$("td");
-
-//       if (cells.length > 2) {
-//         const cityName = await cells[0].evaluate((el) => el.textContent.trim());
-//         const price1 = await cells[1].evaluate((el) => el.textContent.trim());
-//         const price2 = await cells[2].evaluate((el) => el.textContent.trim());
-
-//         data.push({ cityName, price1, price2 });
-//       } else {
-//         console.log('Expected at least 3 cells in the row, but found:', cells.length);
-//       }
-//     }
-
-//     await browser.close();
-//     res.json({ data });
-
-//   } catch (error) {
-//     console.log("Hata", error);
-//     res.status(500).json({ error: error.message });
-//   }
-// };
