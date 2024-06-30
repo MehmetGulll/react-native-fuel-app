@@ -53,6 +53,7 @@ const Index = () => {
   const fetchOpetData = async (city: string) => {
     let lowerCity = city.toLocaleLowerCase("tr-TR");
     setOpetPrice("");
+    setLoadingOpet(true);
     try {
       if (lowerCity === "ığdır") {
         lowerCity = "igdir";
@@ -70,6 +71,8 @@ const Index = () => {
       setOpetPrice(opetResponse.data);
     } catch (error) {
       console.log("Error", error);
+    }finally{
+      setLoadingOpet(false);
     }
   };
 
@@ -342,7 +345,7 @@ const Index = () => {
               <View>
                 <Text style={styles.oilPriceText}>Benzin: {opetPrice[0]} </Text>
                 <Text style={styles.oilPriceText}>Motorin: {opetPrice[1]}</Text>
-                <Text style={styles.oilPriceText}>Otogaz: {opetPrice[2]}</Text>
+                
               </View>
             ) : (
               <Text></Text>
