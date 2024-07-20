@@ -1,21 +1,9 @@
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Image } from "react-native";
+import { Text } from "react-native-paper";
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
-  const text = "Akaryakıt Fiyatları";
-  const colors = [
-    "#ffda00",
-    "#0033A0",
-    "#3E732B",
-    "#0054A6",
-    "#EF4135",
-    "#DB0011",
-  ];
-
-  const getRandomColor = () =>
-    colors[Math.floor(Math.random() * colors.length)];
-
   return (
     <Stack>
       <Stack.Screen
@@ -31,19 +19,7 @@ export default function RootLayout() {
               }}
             >
               <View style={{ flexDirection: "row", marginLeft: 18 }}>
-                {text.split("").map((char, index) => (
-                  <Text
-                    key={index}
-                    style={{
-                      color: getRandomColor(),
-                      marginRight: 5,
-                      fontSize: 18,
-                      fontWeight: "700",
-                    }}
-                  >
-                    {char}
-                  </Text>
-                ))}
+              <Text variant="headlineSmall">Akaryakıt Fiyatları</Text>
               </View>
               <View style={{ padding: 5 }}>
                 <Image
@@ -58,7 +34,7 @@ export default function RootLayout() {
               </View>
             </View>
           ),
-          headerStyle: { backgroundColor: "#FFF5EE" },
+          headerStyle: { backgroundColor: "#FFFFFF" },
           headerTintColor: "#000000",
         }}
       />

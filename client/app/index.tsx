@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, ActivityIndicator } from "react-native";
+import { View, Image, ScrollView } from "react-native";
+import {
+  Card,
+  Text,
+  ActivityIndicator,
+  MD2Colors,
+} from "react-native-paper";
 import styles from "./indexStyle";
 import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
@@ -71,7 +77,7 @@ const Index = () => {
       setOpetPrice(opetResponse.data);
     } catch (error) {
       console.log("Error", error);
-    }finally{
+    } finally {
       setLoadingOpet(false);
     }
   };
@@ -278,6 +284,7 @@ const Index = () => {
       console.log("Error", error);
     }
   };
+
   return (
     <ScrollView>
       <View style={{ alignItems: "center", marginTop: 10 }}>
@@ -305,205 +312,172 @@ const Index = () => {
           marginHorizontal: 5,
         }}
       >
-        <View style={styles.oilStationContainer}>
-          <Image
-            source={{
-              uri: "https://www.ttsbasvuru.com/wp-content/uploads/2021/04/shell.jpg",
-            }}
-            style={styles.oilImageStyle}
-          />
-          <View style={styles.oilTitleTextContainer}>
-            <Text style={[styles.oilText, { color: "#ffda00" }]}>Shell</Text>
+        <Card>
+          <Card.Content>
+            <Text variant="titleLarge">Shell</Text>
+            <Card.Cover
+              style={{ marginTop: 10 }}
+              source={{
+                uri: "https://www.ttsbasvuru.com/wp-content/uploads/2021/04/shell.jpg",
+              }}
+            />
             {loadingShell ? (
-              <ActivityIndicator size="small" color="#0054A6" />
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View>
-                <Text style={styles.oilPriceText}>
-                  Benzin: {shellBenzinPrice}
-                </Text>
-                <Text style={styles.oilPriceText}>
-                  Motorin: {shellDizelPrice}
-                </Text>
+              <View style={{ marginTop: 10, alignItems:'center'}}>
+                <Text variant="bodyLarge">Motorin: {shellDizelPrice}₺</Text>
+                <Text variant="bodyLarge">Benzin: {shellBenzinPrice}₺</Text>
               </View>
             ) : (
-              <Text></Text>
+              <Text variant="bodyLarge">.</Text>
             )}
-          </View>
-        </View>
-        <View style={styles.oilStationContainer}>
-          <Image
-            source={{
-              uri: "https://melihpetrol.com/resim/upload/252.png",
-            }}
-            style={styles.oilImageStyle}
-          />
-          <View style={styles.oilTitleTextContainer}>
-            <Text style={[styles.oilText, { color: "#0033A0" }]}>Opet</Text>
-            {loadingOpet ? (
-              <ActivityIndicator size="small" color="#0054A6" />
-            ) : opetPrice.length > 0 ? (
-              <View>
-                <Text style={styles.oilPriceText}>Benzin: {opetPrice[0]} </Text>
-                <Text style={styles.oilPriceText}>Motorin: {opetPrice[1]}</Text>
-                
+          </Card.Content>
+        </Card>
+        <Card>
+          <Card.Content>
+            <Text variant="titleLarge">Opet</Text>
+            <Card.Cover
+              style={{ marginTop: 10 }}
+              source={{ uri: "https://melihpetrol.com/resim/upload/252.png" }}
+            />
+            {loadingShell ? (
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
+            ) : shellPrice.length > 0 ? (
+              <View style={{ marginTop: 10,alignItems:'center' }}>
+                <Text variant="bodyLarge">Motorin: {opetPrice[1]}₺</Text>
+                <Text variant="bodyLarge">Benzin: {opetPrice[0]}₺</Text>
               </View>
             ) : (
-              <Text></Text>
+              <Text>.</Text>
             )}
-          </View>
-        </View>
-        <View style={styles.oilStationContainer}>
-          <Image
-            source={{
-              uri: "https://10haber.net/wp-content/uploads/2023/11/BP-Turkiye-1024x601.jpg",
-            }}
-            style={styles.oilImageStyle}
-          />
-          <View style={styles.oilTitleTextContainer}>
-            <Text style={[styles.oilText, { color: "#3E732B" }]}>BP</Text>
-            {loadingBp ? (
-              <ActivityIndicator size="small" color="#0054A6" />
-            ) : bpPrice.length > 0 ? (
-              <View>
-                <Text style={styles.oilPriceText}>
-                  Benzin: {bpPrice[0][2]}{" "}
-                </Text>
-                <Text style={styles.oilPriceText}>
-                  Motorin: {bpPrice[0][3]}
-                </Text>
+          </Card.Content>
+        </Card>
+        <Card>
+          <Card.Content>
+            <Text variant="titleLarge">BP</Text>
+            <Card.Cover
+              style={{ marginTop: 10 }}
+              source={{
+                uri: "https://10haber.net/wp-content/uploads/2023/11/BP-Turkiye-1024x601.jpg",
+              }}
+            />
+            {loadingShell ? (
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
+            ) : shellPrice.length > 0 ? (
+              <View style={{ marginTop: 10, alignItems:'center' }}>
+                <Text variant="bodyLarge">Motorin: {bpPrice[0][3]}₺</Text>
+                <Text variant="bodyLarge">Benzin: {bpPrice[0][2]}₺</Text>
               </View>
             ) : (
-              <Text></Text>
+              <Text>.</Text>
             )}
-          </View>
-        </View>
-        <View style={styles.oilStationContainer}>
-          <Image
-            source={{
-              uri: "https://kadoil.com/wp-content/uploads/2021/02/kadoil-duzce-istasyonlari.jpg",
-            }}
-            style={styles.oilImageStyle}
-          />
-          <View style={styles.oilTitleTextContainer}>
-            <Text style={[styles.oilText, { color: "#0054A6" }]}>Kadoil</Text>
-            {loadingKadoil ? (
-              <ActivityIndicator size="small" color="#0054A6" />
-            ) : kadoilPrice.length > 0 ? (
-              <View>
-                <Text style={styles.oilPriceText}>
-                  Benzin: {kadoilPrice[1]}
-                </Text>
-                <Text style={styles.oilPriceText}>
-                  Motorin: {kadoilPrice[2]}
-                </Text>
+          </Card.Content>
+        </Card>
+        <Card>
+          <Card.Content>
+            <Text variant="titleLarge">Kadoil</Text>
+            <Card.Cover
+              style={{ marginTop: 10 }}
+              source={{
+                uri: "https://kadoil.com/wp-content/uploads/2021/02/kadoil-duzce-istasyonlari.jpg",
+              }}
+            />
+            {loadingShell ? (
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
+            ) : shellPrice.length > 0 ? (
+              <View style={{ marginTop: 10, alignItems:'center' }}>
+                <Text variant="bodyLarge">Motorin: {kadoilPrice[2]}₺</Text>
+                <Text variant="bodyLarge">Benzin: {kadoilPrice[1]}₺</Text>
               </View>
             ) : (
-              <Text></Text>
+              <Text>.</Text>
             )}
-          </View>
-        </View>
-        <View style={styles.oilStationContainer}>
-          <Image
-            source={{
-              uri: "https://www.dir.gen.tr/image/229651-0-eskicirak-petrol-alpet.jpg",
-            }}
-            style={styles.oilImageStyle}
-          />
-          <View style={styles.oilTitleTextContainer}>
-            <Text style={[styles.oilText, { color: "#0054A6" }]}>Alpet</Text>
-            {loadingAlpet ? (
-              <ActivityIndicator size="small" color="#0054A6" />
-            ) : alpetPrice.length > 0 ? (
-              <View>
-                <Text style={styles.oilPriceText}>
-                  Benzin: {alpetPrice[0][0]}
-                </Text>
-                <Text style={styles.oilPriceText}>
-                  Motorin: {alpetPrice[1][0]}
-                </Text>
+          </Card.Content>
+        </Card>
+        <Card>
+          <Card.Content>
+            <Text variant="titleLarge">Alpet</Text>
+            <Card.Cover
+              style={{ marginTop: 10 }}
+              source={{
+                uri: "https://www.dir.gen.tr/image/229651-0-eskicirak-petrol-alpet.jpg",
+              }}
+            />
+            {loadingShell ? (
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
+            ) : shellPrice.length > 0 ? (
+              <View style={{ marginTop: 10, alignItems:'center' }}>
+                <Text variant="bodyLarge">Motorin: {alpetPrice[1][0]}₺</Text>
+                <Text variant="bodyLarge">Benzin: {alpetPrice[0][0]}₺</Text>
               </View>
             ) : (
-              <Text></Text>
+              <Text>.</Text>
             )}
-          </View>
-        </View>
-        <View style={styles.oilStationContainer}>
-          <Image
-            source={{
-              uri: "https://fastly.4sqi.net/img/general/600x600/527974929_LXu4elC5vuFouGtg82p9K57LFLo_1OwszpzZM72sdds.jpg",
-            }}
-            style={styles.oilImageStyle}
-          />
-          <View style={styles.oilTitleTextContainer}>
-            <Text style={[styles.oilText, { color: "#EF4135" }]}>Total</Text>
-            {loadingTotal ? (
-              <ActivityIndicator size="small" color="#0054A6" />
-            ) : totalPrice.length > 0 ? (
-              <View>
-                <Text style={styles.oilPriceText}>
-                  Benzin: {totalPrice[0]}{" "}
-                </Text>
-                <Text style={styles.oilPriceText}>
-                  Motorin: {totalPrice[2]}
-                </Text>
+          </Card.Content>
+        </Card>
+        <Card>
+          <Card.Content>
+            <Text variant="titleLarge">Total</Text>
+            <Card.Cover
+              style={{ marginTop: 10 }}
+              source={{
+                uri: "https://fastly.4sqi.net/img/general/600x600/527974929_LXu4elC5vuFouGtg82p9K57LFLo_1OwszpzZM72sdds.jpg",
+              }}
+            />
+            {loadingShell ? (
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
+            ) : shellPrice.length > 0 ? (
+              <View style={{ marginTop: 10, alignItems:'center' }}>
+                <Text variant="bodyLarge">Motorin: {totalPrice[2]}₺</Text>
+                <Text variant="bodyLarge">Benzin: {totalPrice[0]}₺</Text>
               </View>
             ) : (
-              <Text></Text>
+              <Text>.</Text>
             )}
-          </View>
-        </View>
-        <View style={styles.oilStationContainer}>
-          <Image
-            source={{
-              uri: "https://cdnuploads.aa.com.tr/uploads/sirkethaberleri/Contents/2019/12/05/thumbs_b_c_0b2c7d09a483922cb8fb9d9c25cfa3c7.jpg",
-            }}
-            style={styles.oilImageStyle}
-          />
-          <View style={styles.oilTitleTextContainer}>
-            <Text style={[styles.oilText, { color: "#EF4135" }]}>Aytemiz</Text>
-            {loadingAytemiz ? (
-              <ActivityIndicator size="small" color="#0054A6" />
-            ) : aytemizPrice.length > 0 ? (
-              <View>
-                <Text style={styles.oilPriceText}>
-                  Benzin: {aytemizPrice[0]}{" "}
-                </Text>
-                <Text style={styles.oilPriceText}>
-                  Motorin: {aytemizPrice[1]}
-                </Text>
+          </Card.Content>
+        </Card>
+        <Card>
+          <Card.Content>
+            <Text variant="titleLarge">Aytemiz</Text>
+            <Card.Cover
+              style={{ marginTop: 10 }}
+              source={{
+                uri: "https://cdnuploads.aa.com.tr/uploads/sirkethaberleri/Contents/2019/12/05/thumbs_b_c_0b2c7d09a483922cb8fb9d9c25cfa3c7.jpg",
+              }}
+            />
+            {loadingShell ? (
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
+            ) : shellPrice.length > 0 ? (
+              <View style={{ marginTop: 10, alignItems:'center' }}>
+                <Text variant="bodyLarge">Motorin: {aytemizPrice[1]}₺</Text>
+                <Text variant="bodyLarge">Benzin: {aytemizPrice[0]}₺</Text>
               </View>
             ) : (
-              <Text></Text>
+              <Text>.</Text>
             )}
-          </View>
-        </View>
-        <View style={styles.oilStationContainer}>
-          <Image
-            source={{
-              uri: "https://i.dunya.com/storage/files/images/2021/09/21/petrol-ofisi-bV0P_cover.jpg",
-            }}
-            style={styles.oilImageStyle}
-          />
-          <View style={styles.oilTitleTextContainer}>
-            <Text style={[styles.oilText, { color: "#DB0011" }]}>
-              Petrol Ofisi
-            </Text>
-            {loadingPetrolOfisi ? (
-              <ActivityIndicator size="small" color="#0054A6" />
-            ) : petrolOfisiPrice.length > 0 ? (
-              <View>
-                <Text style={styles.oilPriceText}>
-                  Benzin: {petrolOfisiPrice[0]}{" "}
-                </Text>
-                <Text style={styles.oilPriceText}>
-                  Motorin: {petrolOfisiPrice[1]}
-                </Text>
+          </Card.Content>
+        </Card>
+        <Card style={{marginBottom:10}}>
+          <Card.Content>
+            <Text variant="titleLarge">Petrol Ofisi</Text>
+            <Card.Cover
+              style={{ marginTop: 10 }}
+              source={{
+                uri: "https://i.dunya.com/storage/files/images/2021/09/21/petrol-ofisi-bV0P_cover.jpg",
+              }}
+            />
+            {loadingShell ? (
+              <ActivityIndicator animating={true} color={MD2Colors.red800} />
+            ) : shellPrice.length > 0 ? (
+              <View style={{ marginTop: 10, alignItems:'center' }}>
+                <Text variant="bodyLarge">Motorin: {petrolOfisiPrice[1]}₺</Text>
+                <Text variant="bodyLarge">Benzin: {petrolOfisiPrice[0]}₺</Text>
               </View>
             ) : (
-              <Text></Text>
+              <Text>.</Text>
             )}
-          </View>
-        </View>
+          </Card.Content>
+        </Card>
       </View>
     </ScrollView>
   );
