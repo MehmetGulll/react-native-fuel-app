@@ -13,28 +13,23 @@ export default function RootLayout() {
           headerTitle: () => (
             <View
               style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
-              <View style={{ flexDirection: "row", marginLeft: 18 }}>
-              <Text variant="headlineSmall">Akaryakıt Fiyatları</Text>
-              </View>
-              <View style={{ padding: 5 }}>
+              <View style={{ flexDirection: "row" }}></View>
+              <View style={{ padding: 5, marginLeft:150 }}>
                 <Image
                   source={require("../assets/images/fuelLogo.png")}
                   style={{
-                    width: 70,
-                    height: 70,
+                    width: 50,
+                    height: 50,
                     resizeMode: "contain",
-                    marginLeft: 38,
                   }}
                 />
               </View>
             </View>
           ),
-          headerStyle: { backgroundColor: "#FFFFFF" },
+          headerStyle: { backgroundColor: "#b2cbf2" },
           headerTintColor: "#000000",
         }}
       />

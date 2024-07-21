@@ -39,7 +39,8 @@ exports.getOpetPrices = async (req, res) => {
           const priceText = span.textContent;
           const match = priceText.match(/(\d+\.\d+)\s*TL\/L/);
           if (match) {
-            prices.push(match[1]);
+            const formattedPrice = parseFloat(match[1]).toFixed(1);
+            prices.push(formattedPrice);
           }
         });
       });
@@ -126,8 +127,12 @@ exports.getBPPrices = async (req, res) => {
     const prices = await page.evaluate(() => {
       const rows = Array.from(document.querySelectorAll("tbody.pp-tbody tr"));
       return rows.map((row) => {
-        const cells = Array.from(row.querySelectorAll("td")); // tek arraye dönüştürülecek
-        return cells.map((cell) => cell.textContent.trim());
+        const cells = Array.from(row.querySelectorAll("td"));
+        return cells.map((cell) => {
+          const text = cell.textContent.trim();
+          const formattedPrice = parseFloat(text).toFixed(1);
+          return formattedPrice;
+        });
       });
     });
     if (prices) {
@@ -154,9 +159,10 @@ exports.getAlpetPrices = async (req, res) => {
   const page = await browser.newPage();
   const url = `${process.env.ALPET_URI}?dt=${date}&city=${upperCity}`;
   await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
-  await page.click(".cc-btn");
-  console.log("butona basıldı");
-  console.log(url);
+  console.log("URL:", url);
+
+  // Sayfa yükleme ve çerez kabul işlemi esnasında herhangi bir tıklama işlemi yapmadan:
+  // await page.click(".cc-btn");  // Bu satırı yorum olarak bıraktınız, değişiklik yapmadım.
 
   const prices = await page.$$eval("tbody tr", (rows) => {
     return rows.map((row) => {
@@ -166,14 +172,15 @@ exports.getAlpetPrices = async (req, res) => {
           .trim()
           .replace(/ TL\/LT$/, "")
           .replace(/,/g, ".")
-      );
+      ).toFixed(1);
       const price2 = parseFloat(
         columns[3].innerText
           .trim()
           .replace(/ TL\/LT$/, "")
           .replace(/,/g, ".")
-      );
-      return [price1, price2];
+      ).toFixed(1);
+
+      return [parseFloat(price1), parseFloat(price2)];
     });
   });
 
@@ -197,11 +204,9 @@ exports.getKadoilPrices = async (req, res) => {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const frameHandle = await page.$("#frame");
-
-    const frame = await frameHandle.contentFrame(); // diğer istediklerim iframe içinde oldugu için iframei aldım önce
+    const frame = await frameHandle.contentFrame();
 
     await frame.waitForSelector("#selectProvince");
-
     await frame.select("#selectProvince", lowerCity);
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -213,7 +218,11 @@ exports.getKadoilPrices = async (req, res) => {
       (rows) => {
         return rows.map((row) => {
           const cells = row.querySelectorAll("td");
-          return Array.from(cells).map((cell) => cell.innerText);
+          return Array.from(cells).map((cell) => {
+            const text = cell.innerText;
+            const number = parseFloat(text.replace(/,/g, "."));
+            return isNaN(number) ? text : number.toFixed(1);
+          });
         });
       }
     );
@@ -275,9 +284,15 @@ exports.getTotalPrices = async (req, res) => {
               .map((td) => {
                 const text = td.textContent.trim();
                 const match = text.match(/\d+[\.,]?\d*/);
-                return match ? match[0].replace(/,/g, ".") : null;
+                if (match) {
+                  const formattedPrice = parseFloat(
+                    match[0].replace(/,/g, ".")
+                  ).toFixed(1);
+                  return parseFloat(formattedPrice);
+                }
+                return null;
               })
-              .filter((n) => n);
+              .filter((n) => n !== null);
           }
         }
         return [];
@@ -309,7 +324,7 @@ exports.getPetrolOfisiPrices = async (req, res) => {
       ].find((opt) => opt.textContent.trim() === city);
       if (option) {
         option.selected = true;
-        const event = new Event("change", { bubbles: true }); // change yapma sebebimiz onchange yani selecti tetiklemsini sağlamak
+        const event = new Event("change", { bubbles: true });
         option.dispatchEvent(event);
       }
     }, city);
@@ -322,7 +337,7 @@ exports.getPetrolOfisiPrices = async (req, res) => {
     const prices = await Promise.all(
       priceElements.map(async (element) => {
         const priceText = await element.evaluate((el) => el.textContent);
-        return parseFloat(priceText);
+        return parseFloat(parseFloat(priceText).toFixed(1));
       })
     );
 
@@ -373,7 +388,7 @@ exports.getAytemizPrices = async (req, res) => {
     await page.waitForSelector(
       "table#fuel-price-table tbody tr td:not(:first-child)",
       { visible: true }
-    ); // sayfa yenilenince beklesin diye konuldu
+    );
 
     const priceElements = await page.$$(
       "#fuel-price-table tbody tr td:not(:first-child)"
@@ -382,7 +397,7 @@ exports.getAytemizPrices = async (req, res) => {
     const prices = await Promise.all(
       priceElements.map(async (element) => {
         const priceText = await element.evaluate((el) => el.textContent);
-        return parseFloat(priceText.replace(",", "."));
+        return parseFloat(parseFloat(priceText.replace(",", ".")).toFixed(1));
       })
     );
 
@@ -426,10 +441,18 @@ exports.getShellPrices = async (req, res) => {
 
       if (cells.length > 2) {
         const cityName = await cells[0].evaluate((el) => el.textContent.trim());
-        const price1 = await cells[1].evaluate((el) => el.textContent.trim().replace(",", "."));
-        const price2 = await cells[2].evaluate((el) => el.textContent.trim().replace(",", "."));
+        const price1 = await cells[1].evaluate((el) =>
+          parseFloat(el.textContent.trim().replace(",", ".")).toFixed(1)
+        );
+        const price2 = await cells[2].evaluate((el) =>
+          parseFloat(el.textContent.trim().replace(",", ".")).toFixed(1)
+        );
 
-        data.push({ cityName, price1, price2 });
+        data.push({
+          cityName,
+          price1: parseFloat(price1),
+          price2: parseFloat(price2),
+        });
       } else {
         console.log("Değerler:", cells.length);
       }
@@ -441,5 +464,3 @@ exports.getShellPrices = async (req, res) => {
     console.log("Hata", error);
   }
 };
-
-

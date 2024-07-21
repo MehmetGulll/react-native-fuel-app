@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Image, ScrollView } from "react-native";
-import {
-  Card,
-  Text,
-  ActivityIndicator,
-  MD2Colors,
-} from "react-native-paper";
-import styles from "./indexStyle";
+import { View, ScrollView } from "react-native";
+import { Card, Text, ActivityIndicator, MD2Colors } from "react-native-paper";
+import { BarChart } from "react-native-gifted-charts";
 import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
 
@@ -18,6 +13,10 @@ const Index = () => {
     label: string;
     value: string;
   };
+  interface BarItem {
+    value: number;
+    
+  }
   const [cities, setCities] = useState<Item[]>([]);
   const [opetPrice, setOpetPrice] = useState("");
   const [bpPrice, setBpPrice] = useState("");
@@ -36,7 +35,16 @@ const Index = () => {
   const [loadingTotal, setLoadingTotal] = useState(false);
   const [loadingAytemiz, setLoadingAytemiz] = useState(false);
   const [loadingPetrolOfisi, setLoadingPetrolOfisi] = useState(false);
+  const [loadingBenzinChart, setLoadingBenzinChart] = useState(false);
+  const [loadingDieselChart, setLoadingDieselChart] = useState(false);
   const [loadingShell, setLoadingShell] = useState(false);
+  const [barDataBenzinPrice, setBarDataBenzinPrice] = useState<
+    { label: string; value: number }[]
+  >([]);
+  const [barDataDieselPrice, setBarDataDieselPrice] = useState<
+    { label: string; value: number }[]
+  >([]);
+
   useEffect(() => {
     const fetchCities = async () => {
       try {
@@ -259,18 +267,19 @@ const Index = () => {
   };
 
   const handleCitySelect = async (selectedCity: string) => {
-    console.log("seçilen şehir", selectedCity);
+    console.log("Seçilen şehir", selectedCity);
+    setLoadingOpet(true);
+    setLoadingBp(true);
+    setLoadingKadoil(true);
+    setLoadingAlpet(true);
+    setLoadingTotal(true);
+    setLoadingAytemiz(true);
+    setLoadingPetrolOfisi(true);
+    setLoadingShell(true);
+    setLoadingBenzinChart(true);
+
     try {
-      const [
-        opetPrice,
-        bpPrice,
-        kadoilPrice,
-        alpetPrice,
-        totalPrice,
-        aytemizPrice,
-        petrolOfisiPrice,
-        shellPrice,
-      ] = await Promise.all([
+      const results = await Promise.allSettled([
         fetchOpetData(selectedCity),
         fetchBPData(selectedCity),
         fetchKadoilData(selectedCity),
@@ -280,9 +289,64 @@ const Index = () => {
         fetchPetrolofisiData(selectedCity),
         fetchShellData(selectedCity),
       ]);
+    
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.log(`Error in promise ${index}:`, result.reason);
+        }
+      });
+    
+      
+      if (results.every(result => result.status === 'fulfilled')) {
+        updatedBarDataBenzinPrice();
+        updatedBarDataDieselPrice();
+      }
     } catch (error) {
-      console.log("Error", error);
+      console.log("Unhandled error:", error);
+    } finally {
+      setLoadingOpet(false);
+      setLoadingBp(false);
+      setLoadingKadoil(false);
+      setLoadingAlpet(false);
+      setLoadingTotal(false);
+      setLoadingAytemiz(false);
+      setLoadingPetrolOfisi(false);
+      setLoadingShell(false);
+      setLoadingBenzinChart(false);
     }
+    
+  };
+  const updatedBarDataBenzinPrice = () => {
+    const updatedBarDataBenzinPrice = [
+      { label: "Shell", value: parseFloat(shellBenzinPrice) ?? 0 },
+      { label: "Opet", value: parseFloat(opetPrice[0]) ?? 0 },
+      { label: "BP", value: parseFloat(bpPrice[0][2]) ?? 0 },
+      { label: "Kadoil", value: parseFloat(kadoilPrice[1]) ?? 0 },
+      { label: "Alpet", value: parseFloat(alpetPrice[0][0]) ?? 0 },
+      { label: "Total", value: parseFloat(totalPrice[0]) ?? 0 },
+      { label: "Aytemiz", value: parseFloat(aytemizPrice[0]) ?? 0 },
+      {
+        label: "Petrol Ofisi",
+        value: parseFloat(petrolOfisiPrice[0]) ?? 0,
+      },
+    ];
+    setBarDataBenzinPrice(updatedBarDataBenzinPrice);
+  };
+  const updatedBarDataDieselPrice = () => {
+    const updateBarDataDieselPrice = [
+      { label: "Shell", value: parseFloat(shellDizelPrice) ?? 0 },
+      { label: "Opet", value: parseFloat(opetPrice[1]) ?? 0 },
+      { label: "BP", value: parseFloat(bpPrice[0][3]) ?? 0 },
+      { label: "Kadoil", value: parseFloat(kadoilPrice[2]) ?? 0 },
+      { label: "Alpet", value: parseFloat(alpetPrice[1][0]) ?? 0 },
+      { label: "Total", value: parseFloat(totalPrice[2]) ?? 0 },
+      { label: "Aytemiz", value: parseFloat(aytemizPrice[1]) ?? 0 },
+      {
+        label: "Petrol Ofisi",
+        value: parseFloat(petrolOfisiPrice[0]) ?? 0,
+      },
+    ];
+    setBarDataDieselPrice(updateBarDataDieselPrice);
   };
 
   return (
@@ -312,172 +376,305 @@ const Index = () => {
           marginHorizontal: 5,
         }}
       >
-        <Card>
-          <Card.Content>
-            <Text variant="titleLarge">Shell</Text>
-            <Card.Cover
-              style={{ marginTop: 10 }}
-              source={{
-                uri: "https://www.ttsbasvuru.com/wp-content/uploads/2021/04/shell.jpg",
-              }}
-            />
+        <View style = {{flexDirection:'row', justifyContent:'space-between', marginHorizontal:20}}>
+          <View>
+            <Text variant="titleSmall">Yakıt Cinsi</Text>
+          </View>
+          <View style = {{flexDirection:'row', gap:20}}>
+            <Text variant="titleSmall">Motorin</Text>
+            <Text variant="titleSmall">Benzin</Text>
+          </View>
+        </View>
+        <Card style = {{borderWidth:2, borderColor:'#b2cbf2', marginHorizontal:20}}>
+          <Card.Content
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Text variant="titleMedium" >Shell</Text>
+            </View>
+
             {loadingShell ? (
               <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View style={{ marginTop: 10, alignItems:'center'}}>
-                <Text variant="bodyLarge">Motorin: {shellDizelPrice}₺</Text>
-                <Text variant="bodyLarge">Benzin: {shellBenzinPrice}₺</Text>
+              <View
+                style={{
+                  alignItems: "center",
+                  flexDirection: "row",
+                  gap: 10,
+                }}
+              >
+                <Text variant="bodyLarge">{shellDizelPrice}₺</Text>
+                <Text variant="bodyLarge">{shellBenzinPrice}₺</Text>
               </View>
             ) : (
               <Text variant="bodyLarge">.</Text>
             )}
           </Card.Content>
         </Card>
-        <Card>
-          <Card.Content>
-            <Text variant="titleLarge">Opet</Text>
-            <Card.Cover
-              style={{ marginTop: 10 }}
-              source={{ uri: "https://melihpetrol.com/resim/upload/252.png" }}
-            />
+        <Card style = {{borderWidth:2, borderColor:'#b2cbf2',marginHorizontal:20}}>
+          <Card.Content
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Text variant="titleMedium">Opet</Text>
+            </View>
+
             {loadingShell ? (
               <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View style={{ marginTop: 10,alignItems:'center' }}>
-                <Text variant="bodyLarge">Motorin: {opetPrice[1]}₺</Text>
-                <Text variant="bodyLarge">Benzin: {opetPrice[0]}₺</Text>
+              <View
+                style={{ alignItems: "center", flexDirection: "row", gap: 10 }}
+              >
+                <Text variant="bodyLarge">{opetPrice[1]}₺</Text>
+                <Text variant="bodyLarge">{opetPrice[0]}₺</Text>
               </View>
             ) : (
               <Text>.</Text>
             )}
           </Card.Content>
         </Card>
-        <Card>
-          <Card.Content>
-            <Text variant="titleLarge">BP</Text>
-            <Card.Cover
-              style={{ marginTop: 10 }}
-              source={{
-                uri: "https://10haber.net/wp-content/uploads/2023/11/BP-Turkiye-1024x601.jpg",
-              }}
-            />
+        <Card style = {{borderWidth:2, borderColor:'#b2cbf2',marginHorizontal:20}}>
+          <Card.Content
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Text variant="titleMedium">BP</Text>
+            </View>
+
             {loadingShell ? (
               <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View style={{ marginTop: 10, alignItems:'center' }}>
-                <Text variant="bodyLarge">Motorin: {bpPrice[0][3]}₺</Text>
-                <Text variant="bodyLarge">Benzin: {bpPrice[0][2]}₺</Text>
+              <View
+                style={{ alignItems: "center", flexDirection: "row", gap: 10 }}
+              >
+                <Text variant="bodyLarge">{bpPrice[0][3]}₺</Text>
+                <Text variant="bodyLarge">{bpPrice[0][2]}₺</Text>
               </View>
             ) : (
               <Text>.</Text>
             )}
           </Card.Content>
         </Card>
-        <Card>
-          <Card.Content>
-            <Text variant="titleLarge">Kadoil</Text>
-            <Card.Cover
-              style={{ marginTop: 10 }}
-              source={{
-                uri: "https://kadoil.com/wp-content/uploads/2021/02/kadoil-duzce-istasyonlari.jpg",
-              }}
-            />
+        <Card style = {{borderWidth:2, borderColor:'#b2cbf2',marginHorizontal:20}}>
+          <Card.Content
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Text variant="titleMedium">Kadoil</Text>
+            </View>
+
             {loadingShell ? (
               <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View style={{ marginTop: 10, alignItems:'center' }}>
-                <Text variant="bodyLarge">Motorin: {kadoilPrice[2]}₺</Text>
-                <Text variant="bodyLarge">Benzin: {kadoilPrice[1]}₺</Text>
+              <View
+                style={{ alignItems: "center", flexDirection: "row", gap: 10 }}
+              >
+                <Text variant="bodyLarge">{kadoilPrice[2]}₺</Text>
+                <Text variant="bodyLarge">{kadoilPrice[1]}₺</Text>
               </View>
             ) : (
               <Text>.</Text>
             )}
           </Card.Content>
         </Card>
-        <Card>
-          <Card.Content>
-            <Text variant="titleLarge">Alpet</Text>
-            <Card.Cover
-              style={{ marginTop: 10 }}
-              source={{
-                uri: "https://www.dir.gen.tr/image/229651-0-eskicirak-petrol-alpet.jpg",
-              }}
-            />
+        <Card style = {{borderWidth:2, borderColor:'#b2cbf2',marginHorizontal:20}}>
+          <Card.Content
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Text variant="titleMedium">Alpet</Text>
+            </View>
+
             {loadingShell ? (
               <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View style={{ marginTop: 10, alignItems:'center' }}>
-                <Text variant="bodyLarge">Motorin: {alpetPrice[1][0]}₺</Text>
-                <Text variant="bodyLarge">Benzin: {alpetPrice[0][0]}₺</Text>
+              <View
+                style={{ alignItems: "center", flexDirection: "row", gap: 10 }}
+              >
+                <Text variant="bodyLarge">{alpetPrice[1][0]}₺</Text>
+                <Text variant="bodyLarge">{alpetPrice[0][0]}₺</Text>
               </View>
             ) : (
               <Text>.</Text>
             )}
           </Card.Content>
         </Card>
-        <Card>
-          <Card.Content>
-            <Text variant="titleLarge">Total</Text>
-            <Card.Cover
-              style={{ marginTop: 10 }}
-              source={{
-                uri: "https://fastly.4sqi.net/img/general/600x600/527974929_LXu4elC5vuFouGtg82p9K57LFLo_1OwszpzZM72sdds.jpg",
-              }}
-            />
+        <Card style = {{borderWidth:2, borderColor:'#b2cbf2',marginHorizontal:20}}>
+          <Card.Content
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Text variant="titleMedium">Total</Text>
+            </View>
+
             {loadingShell ? (
               <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View style={{ marginTop: 10, alignItems:'center' }}>
-                <Text variant="bodyLarge">Motorin: {totalPrice[2]}₺</Text>
-                <Text variant="bodyLarge">Benzin: {totalPrice[0]}₺</Text>
+              <View
+                style={{ alignItems: "center", flexDirection: "row", gap: 10 }}
+              >
+                <Text variant="bodyLarge">{totalPrice[2]}₺</Text>
+                <Text variant="bodyLarge">{totalPrice[0]}₺</Text>
               </View>
             ) : (
               <Text>.</Text>
             )}
           </Card.Content>
         </Card>
-        <Card>
-          <Card.Content>
-            <Text variant="titleLarge">Aytemiz</Text>
-            <Card.Cover
-              style={{ marginTop: 10 }}
-              source={{
-                uri: "https://cdnuploads.aa.com.tr/uploads/sirkethaberleri/Contents/2019/12/05/thumbs_b_c_0b2c7d09a483922cb8fb9d9c25cfa3c7.jpg",
-              }}
-            />
+        <Card style = {{borderWidth:2, borderColor:'#b2cbf2',marginHorizontal:20}}>
+          <Card.Content
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Text variant="titleMedium">Aytemiz</Text>
+            </View>
+
             {loadingShell ? (
               <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View style={{ marginTop: 10, alignItems:'center' }}>
-                <Text variant="bodyLarge">Motorin: {aytemizPrice[1]}₺</Text>
-                <Text variant="bodyLarge">Benzin: {aytemizPrice[0]}₺</Text>
+              <View
+                style={{ alignItems: "center", flexDirection: "row", gap: 10 }}
+              >
+                <Text variant="bodyLarge">{aytemizPrice[1]}₺</Text>
+                <Text variant="bodyLarge">{aytemizPrice[0]}₺</Text>
               </View>
             ) : (
               <Text>.</Text>
             )}
           </Card.Content>
         </Card>
-        <Card style={{marginBottom:10}}>
-          <Card.Content>
-            <Text variant="titleLarge">Petrol Ofisi</Text>
-            <Card.Cover
-              style={{ marginTop: 10 }}
-              source={{
-                uri: "https://i.dunya.com/storage/files/images/2021/09/21/petrol-ofisi-bV0P_cover.jpg",
-              }}
-            />
+        <Card style = {{borderWidth:2, borderColor:'#b2cbf2', marginBottom:10,marginHorizontal:20}}>
+          <Card.Content
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Text variant="titleMedium">Petrol Ofisi</Text>
+            </View>
+
             {loadingShell ? (
               <ActivityIndicator animating={true} color={MD2Colors.red800} />
             ) : shellPrice.length > 0 ? (
-              <View style={{ marginTop: 10, alignItems:'center' }}>
-                <Text variant="bodyLarge">Motorin: {petrolOfisiPrice[1]}₺</Text>
-                <Text variant="bodyLarge">Benzin: {petrolOfisiPrice[0]}₺</Text>
+              <View
+                style={{ alignItems: "center", flexDirection: "row", gap: 10 }}
+              >
+                <Text variant="bodyLarge">{petrolOfisiPrice[1]}₺</Text>
+                <Text variant="bodyLarge">{petrolOfisiPrice[0]}₺</Text>
               </View>
             ) : (
               <Text>.</Text>
             )}
           </Card.Content>
         </Card>
+        {loadingBenzinChart ? (
+          <ActivityIndicator animating={true} color={MD2Colors.red800} />
+        ) : barDataBenzinPrice.length > 0 ? (
+          <View style = {{borderWidth:1, borderColor:'red', padding:5, borderRadius:15}}>
+            <View style={{ alignItems: "center" }}>
+              <Text variant="titleSmall">Benzin Fiyatları Grafik</Text>
+            </View>
+            <View >
+              <BarChart
+                barWidth={22}
+                noOfSections={3}
+                barBorderRadius={4}
+                frontColor="#b2cbf2"
+                data={barDataBenzinPrice}
+                yAxisThickness={0}
+                xAxisThickness={0}
+                isAnimated
+                renderTooltip={(item: BarItem) => {
+                  return (
+                    <View
+                      style={{
+                      
+                        marginLeft: -6,
+                        backgroundColor: "#ffcefe",
+                        paddingHorizontal: 6,
+                        paddingVertical: 4,
+                        borderRadius: 4,
+                      }}
+                    >
+                      <Text>{` ${item.value}`}</Text>
+                    </View>
+                  );
+                }}
+              />
+            </View>
+          </View>
+        ) : (
+          <Text>.</Text>
+        )}
+        {loadingDieselChart ? (
+          <ActivityIndicator animating={true} color={MD2Colors.red800} />
+        ) : barDataDieselPrice.length > 0 ? (
+          <View style = {{borderWidth:1, borderColor:'red', padding:5, borderRadius:15, marginVertical:10}}>
+            <View style={{ alignItems: "center" }}>
+              <Text variant="titleSmall">Motorin Fiyatları Grafik</Text>
+            </View>
+            <View>
+              <BarChart
+                barWidth={22}
+                noOfSections={3}
+                barBorderRadius={4}
+                frontColor="#b2cbf2"
+                data={barDataDieselPrice}
+                yAxisThickness={0}
+                xAxisThickness={0}
+                isAnimated
+                renderTooltip={(item: BarItem) => {
+                  return (
+                    <View
+                      style={{
+                        marginTop: 5,
+                        marginLeft: -6,
+                        backgroundColor: "#ffcefe",
+                        paddingHorizontal: 6,
+                        paddingVertical: 4,
+                        borderRadius: 4,
+                      }}
+                    >
+                      <Text>{item.value}</Text>
+                    </View>
+                  );
+                }}
+              />
+            </View>
+          </View>
+        ) : (
+          <Text>.</Text>
+        )}
       </View>
     </ScrollView>
   );
