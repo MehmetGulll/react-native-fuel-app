@@ -59,6 +59,8 @@ exports.getOpetPrices = async (req, res) => {
       .json({ error: "Yakıt fiyatlarını çekme işlemi başarısız oldu." });
   }
 };
+
+
 exports.getBPPrices = async (req, res) => {
   const { city } = req.body;
   console.log("değer", city);
@@ -69,9 +71,9 @@ exports.getBPPrices = async (req, res) => {
     await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
     console.log("Sayfaya gidildi");
     await page.waitForSelector(".nr-cookie-accept", { visible: true });
-    console.log("Çerezi pop up bulundu!");
+    console.log("Çerezi pop up bulundu");
     await page.click(".nr-cookie-accept");
-    console.log("Çerez pop up tıklandı kabul edildi!");
+    console.log("Çerez pop up tıklandı kabul edildi");
 
     await page.click('select[name="city"]');
 
@@ -121,7 +123,7 @@ exports.getBPPrices = async (req, res) => {
 
     await page.waitForSelector("tbody.pp-tbody");
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     console.log("Ekstra bekleme süresi ekleniyor..");
 
     const prices = await page.evaluate(() => {
@@ -130,21 +132,25 @@ exports.getBPPrices = async (req, res) => {
         const cells = Array.from(row.querySelectorAll("td"));
         return cells.map((cell) => {
           const text = cell.textContent.trim();
-          const formattedPrice = parseFloat(text).toFixed(1);
-          return formattedPrice;
-        });
+          const price = parseFloat(text);
+          if (!isNaN(price)) { 
+            return price.toFixed(1);
+          }
+        }).filter(price => price !== undefined); 
       });
     });
-    if (prices) {
-      res.json(prices);
-    } else {
+
+    if (prices.length === 0 || prices.every(row => row.length === 0)) {
       res.json("Petrol ofisi bulunmamaktadır!");
+    } else {
+      res.json(prices);
     }
 
     console.log("Alınan fiyatlar:", prices);
     await browser.close();
   } catch (error) {
     console.log("Error", error);
+    res.status(500).send("Bir hata meydana geldi");
   }
 };
 
@@ -161,8 +167,8 @@ exports.getAlpetPrices = async (req, res) => {
   await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
   console.log("URL:", url);
 
-  // Sayfa yükleme ve çerez kabul işlemi esnasında herhangi bir tıklama işlemi yapmadan:
-  // await page.click(".cc-btn");  // Bu satırı yorum olarak bıraktınız, değişiklik yapmadım.
+
+  // await page.click(".cc-btn"); 
 
   const prices = await page.$$eval("tbody tr", (rows) => {
     return rows.map((row) => {
